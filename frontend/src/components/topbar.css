@@ -1,0 +1,198 @@
+/* ============================================================
+   TOPBAR
+============================================================ */
+
+.topbar {
+  height: 70px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-w, 260px);
+  z-index: 90;
+  transition: left 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  gap: 16px;
+}
+
+/* ---- Breadcrumb / title area ---- */
+.topbar-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.topbar-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- Search ---- */
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-soft);
+  border: 1.5px solid var(--border);
+  border-radius: 40px;
+  padding: 0 16px;
+  height: 42px;
+  width: 300px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.topbar-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  background: var(--surface);
+  width: 340px;
+}
+
+.search-icon { color: var(--text-muted); flex-shrink: 0; }
+
+.topbar-search input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.topbar-search input::placeholder { color: var(--text-muted); }
+
+/* ---- Actions ---- */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ---- Theme Toggle ---- */
+.theme-toggle {
+  background: var(--surface-soft);
+  border: 1.5px solid var(--border);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.theme-toggle:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary-border);
+  transform: rotate(15deg) scale(1.05);
+}
+
+/* ---- Notification btn ---- */
+.topbar-icon-btn {
+  background: var(--surface-soft);
+  border: 1.5px solid var(--border);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.topbar-icon-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  transform: scale(1.05);
+}
+
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: var(--danger);
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ---- Seed button ---- */
+.seed-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--primary-soft);
+  border: 1.5px solid var(--primary-border);
+  color: var(--primary-dark);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.seed-btn:hover {
+  background: var(--primary-border);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);
+}
+
+.seed-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 1100px) {
+  .topbar {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .topbar-search {
+    display: none;
+  }
+
+  .topbar-title,
+  .topbar-subtitle {
+    white-space: nowrap;
+  }
+}
