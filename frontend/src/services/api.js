@@ -44,13 +44,18 @@ async function request(endpoint, options = {}) {
     } catch (error) {
         if (error instanceof TypeError) {
             throw new Error(
-                "Could not connect to the API. Make sure the FastAPI backend is running on http://127.0.0.1:8000."
+                "Could not connect to the API. Check VITE_API_BASE_URL and make sure the API service is running."
             );
         }
         throw error;
     }
 
     if (!response.ok) {
+        if (response.status === 401 && token) {
+            setStoredToken(null);
+            window.dispatchEvent(new Event("admin-auth-expired"));
+        }
+
         const contentType = response.headers.get("content-type") || "";
         let message = `API Error: ${response.status}`;
 
@@ -220,6 +225,12 @@ export function resetAndReseedData() {
 
 export const API_BASE = API_BASE_URL;
 
-export function exportConversations() {
-    window.open(`${API_BASE}/conversations/export`, "_blank", "noopener");
+export async function exportConversations() {
+    const blob = await request("/conversations/export");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "conversations_export.csv";
+    link.click();
+    URL.revokeObjectURL(url);
 }

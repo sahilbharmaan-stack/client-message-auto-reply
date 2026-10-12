@@ -8,10 +8,12 @@ import csv
 from io import StringIO
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 try:
+    from backend.auth import verify_token
     from backend.database import get_connection, init_database, seed_default_rules
     from backend.schemas import (
         ConversationCreate,
@@ -30,6 +32,7 @@ try:
     from backend.routers.auth import router as auth_router
     from backend.analytics import get_dashboard_stats as calc_dashboard_stats, get_daily_conversations
 except ImportError:
+    from auth import verify_token
     from database import get_connection, init_database, seed_default_rules
     from schemas import (
         ConversationCreate,
@@ -61,6 +64,27 @@ app = FastAPI(
 
 # Mount authentication router
 app.include_router(auth_router)
+
+admin_bearer = HTTPBearer(auto_error=False)
+
+
+def _verify_admin_credentials(
+    credentials: Optional[HTTPAuthorizationCredentials],
+):
+    token_data = verify_token(credentials.credentials if credentials else "")
+    if not token_data or token_data.get("role") != "admin":
+        raise HTTPException(
+            status_code=401,
+            detail="A valid admin login is required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return token_data
+
+
+def require_admin(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(admin_bearer),
+):
+    return _verify_admin_credentials(credentials)
 
 
 # ============================================================
@@ -116,7 +140,7 @@ def health():
 # CONVERSATIONS - LIST ALL
 # ============================================================
 
-@app.get("/conversations")
+@app.get("/conversations", dependencies=[Depends(require_admin)])
 def get_conversations(status: Optional[str] = None, search: Optional[str] = None):
     connection = get_connection()
     cursor = connection.cursor()
@@ -171,7 +195,7 @@ def get_conversations(status: Optional[str] = None, search: Optional[str] = None
 # CONVERSATIONS - EXPORT AS CSV
 # ============================================================
 
-@app.get("/conversations/export")
+@app.get("/conversations/export", dependencies=[Depends(require_admin)])
 def export_conversations():
     connection = get_connection()
     cursor = connection.cursor()
@@ -240,7 +264,7 @@ def export_conversations():
 # CONVERSATION - GET SINGLE DETAILS
 # ============================================================
 
-@app.get("/conversations/{conversation_id}")
+@app.get("/conversations/{conversation_id}", dependencies=[Depends(require_admin)])
 def get_conversation(conversation_id: int):
     connection = get_connection()
     cursor = connection.cursor()
@@ -386,7 +410,11 @@ def create_conversation(data: ConversationCreate):
 # ============================================================
 
 @app.post("/conversations/{conversation_id}/messages")
-def send_message(conversation_id: int, data: MessageCreate):
+def send_message(
+    conversation_id: int,
+    data: MessageCreate,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(admin_bearer),
+):
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -402,6 +430,7 @@ def send_message(conversation_id: int, data: MessageCreate):
     sender = (data.sender or "customer").lower()
 
     if sender in ["agent", "admin", "support"]:
+        _verify_admin_credentials(credentials)
         # Manual agent reply: no bot trigger, mark as replied
         cursor.execute(
             """
@@ -469,7 +498,10 @@ def send_message(conversation_id: int, data: MessageCreate):
 # AGENT DIRECT MANUAL REPLY
 # ============================================================
 
-@app.post("/conversations/{conversation_id}/reply")
+@app.post(
+    "/conversations/{conversation_id}/reply",
+    dependencies=[Depends(require_admin)],
+)
 def reply_as_agent(conversation_id: int, data: AgentReplyCreate):
     connection = get_connection()
     cursor = connection.cursor()
@@ -516,7 +548,10 @@ def reply_as_agent(conversation_id: int, data: AgentReplyCreate):
 # UPDATE CONVERSATION (Status, details)
 # ============================================================
 
-@app.put("/conversations/{conversation_id}")
+@app.put(
+    "/conversations/{conversation_id}",
+    dependencies=[Depends(require_admin)],
+)
 def update_conversation(conversation_id: int, data: ConversationUpdate):
     connection = get_connection()
     cursor = connection.cursor()
@@ -557,7 +592,10 @@ def update_conversation(conversation_id: int, data: ConversationUpdate):
 # DELETE CONVERSATION
 # ============================================================
 
-@app.delete("/conversations/{conversation_id}")
+@app.delete(
+    "/conversations/{conversation_id}",
+    dependencies=[Depends(require_admin)],
+)
 def delete_conversation(conversation_id: int):
     connection = get_connection()
     cursor = connection.cursor()
@@ -588,7 +626,7 @@ def delete_conversation(conversation_id: int):
 # AUTO REPLY RULES CRUD
 # ============================================================
 
-@app.get("/auto-reply-rules")
+@app.get("/auto-reply-rules", dependencies=[Depends(require_admin)])
 def get_auto_reply_rules():
     connection = get_connection()
     cursor = connection.cursor()
@@ -604,7 +642,7 @@ def get_auto_reply_rules():
     return [dict(row) for row in rows]
 
 
-@app.post("/auto-reply-rules")
+@app.post("/auto-reply-rules", dependencies=[Depends(require_admin)])
 def create_auto_reply_rule(data: AutoReplyRuleCreate):
     connection = get_connection()
     cursor = connection.cursor()
@@ -627,7 +665,10 @@ def create_auto_reply_rule(data: AutoReplyRuleCreate):
     }
 
 
-@app.put("/auto-reply-rules/{rule_id}")
+@app.put(
+    "/auto-reply-rules/{rule_id}",
+    dependencies=[Depends(require_admin)],
+)
 def update_auto_reply_rule(rule_id: int, data: AutoReplyRuleUpdate):
     connection = get_connection()
     cursor = connection.cursor()
@@ -661,7 +702,10 @@ def update_auto_reply_rule(rule_id: int, data: AutoReplyRuleUpdate):
     }
 
 
-@app.delete("/auto-reply-rules/{rule_id}")
+@app.delete(
+    "/auto-reply-rules/{rule_id}",
+    dependencies=[Depends(require_admin)],
+)
 def delete_auto_reply_rule(rule_id: int):
     connection = get_connection()
     cursor = connection.cursor()
@@ -682,7 +726,7 @@ def delete_auto_reply_rule(rule_id: int):
 # TEST PLAYGROUND FOR AUTO REPLIES
 # ============================================================
 
-@app.post("/test-auto-reply")
+@app.post("/test-auto-reply", dependencies=[Depends(require_admin)])
 def test_auto_reply(data: ChatMessage):
     result = match_auto_reply_detail(data.message)
     return {
@@ -699,7 +743,7 @@ def test_auto_reply(data: ChatMessage):
 # ANALYTICS ENDPOINTS
 # ============================================================
 
-@app.get("/analytics/dashboard")
+@app.get("/analytics/dashboard", dependencies=[Depends(require_admin)])
 def get_dashboard_analytics():
     connection = get_connection()
     cursor = connection.cursor()
@@ -737,7 +781,7 @@ def get_dashboard_analytics():
     }
 
 
-@app.get("/analytics/daily")
+@app.get("/analytics/daily", dependencies=[Depends(require_admin)])
 def get_daily_analytics_data():
     return get_daily_conversations()
 
@@ -746,7 +790,7 @@ def get_daily_analytics_data():
 # SEED DEMO DATA
 # ============================================================
 
-@app.post("/seed")
+@app.post("/seed", dependencies=[Depends(require_admin)])
 def seed_demo_data():
     examples = [
         (
@@ -833,7 +877,7 @@ def seed_demo_data():
     return {"seeded": True, "count": len(examples)}
 
 
-@app.post("/seed/reset")
+@app.post("/seed/reset", dependencies=[Depends(require_admin)])
 def reset_and_reseed_data():
     connection = get_connection()
     cursor = connection.cursor()

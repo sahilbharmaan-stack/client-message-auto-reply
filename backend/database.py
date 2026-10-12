@@ -9,6 +9,7 @@
 # auto_reply_rules = automatic reply rules
 # ============================================================
 
+import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -20,7 +21,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DATABASE_PATH = BASE_DIR / "chat_auto_reply"
+DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "chat_auto_reply"))
 LEGACY_DATABASE_PATH = BASE_DIR / "chat_auto_reply.db"
 
 
@@ -35,6 +36,7 @@ def _timestamp_or_now(value):
 
 def get_connection():
 
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(
         DATABASE_PATH,
         check_same_thread=False

@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { seedDemoData, exportConversations, resetAndReseedData } from "../services/api";
+import { seedDemoData, exportConversations, logoutAdmin, resetAndReseedData } from "../services/api";
 import "./topbar.css";
 
 export default function Topbar() {
@@ -58,6 +58,12 @@ export default function Topbar() {
     if (e.key === "Enter" && searchQuery.trim()) {
       navigate(`/conversations?search=${encodeURIComponent(searchQuery.trim())}`);
     }
+  }
+
+  function handleLogout() {
+    logoutAdmin();
+    window.dispatchEvent(new Event("admin-auth-expired"));
+    navigate("/login", { replace: true });
   }
 
   const notifications = [
@@ -142,6 +148,10 @@ export default function Topbar() {
         </button>
 
         {/* Dark mode toggle */}
+        <button className="seed-btn" onClick={handleLogout} title="Log out of the admin console">
+          Log out
+        </button>
+
         <button
           className="theme-toggle"
           onClick={toggleTheme}

@@ -15,6 +15,7 @@ import {
 
 import { ThemeProvider } from "./context/ThemeContext";
 import AdminLayout from "./components/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 import Dashboard from "./pages/Dashboard";
 import Conversations from "./pages/Conversation";
@@ -30,6 +31,8 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/login" element={<AdminLogin />} />
+
           {/* ==================================================
               ADMIN SUITE (Protected & Wrapped in AdminLayout)
           ================================================== */}

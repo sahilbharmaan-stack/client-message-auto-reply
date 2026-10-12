@@ -10,17 +10,20 @@ import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
 try:
-    # pyrefly: ignore [missing-import]
     import jwt
-except ImportError:
-    jwt = None
+except ImportError as error:
+    raise RuntimeError("PyJWT is required for secure admin authentication.") from error
 
 
 # ============================================================
 # JWT CONFIGURATION
 # ============================================================
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "auto-reply-secret-key-super-secure-2026")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if os.environ.get("RENDER"):
+        raise RuntimeError("SECRET_KEY must be configured for the deployed API.")
+    SECRET_KEY = "local-development-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
@@ -80,12 +83,7 @@ def create_access_token(data: dict) -> str:
     )
     to_encode.update({"exp": expire})
 
-    if jwt:
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
-    # Safe fallback if jwt module is somehow unavailable
-    token_payload = f"{to_encode.get('sub', 'admin')}:{secrets.token_urlsafe(32)}"
-    return token_payload
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 # ============================================================
@@ -96,15 +94,8 @@ def verify_token(token: str):
     if not token:
         return None
 
-    if jwt:
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            return payload
-        except Exception:
-            return None
-
-    # Fallback
-    if ":" in token:
-        sub = token.split(":")[0]
-        return {"sub": sub, "role": "admin"}
-    return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.PyJWTError:
+        return None

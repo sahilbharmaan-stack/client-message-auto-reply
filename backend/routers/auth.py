@@ -4,6 +4,8 @@
 # Admin login API.
 # ============================================================
 
+import os
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -40,8 +42,12 @@ class LoginRequest(BaseModel):
 # DEVELOPMENT ADMIN ACCOUNT
 # ============================================================
 
-ADMIN_EMAIL = "admin@company.com"
-ADMIN_PASSWORD = "admin123"
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+if os.environ.get("RENDER") and (not ADMIN_EMAIL or not ADMIN_PASSWORD):
+    raise RuntimeError("ADMIN_EMAIL and ADMIN_PASSWORD must be configured for the deployed API.")
+ADMIN_EMAIL = ADMIN_EMAIL or "admin@company.com"
+ADMIN_PASSWORD = ADMIN_PASSWORD or "admin123"
 ADMIN_PASSWORD_HASH = get_password_hash(ADMIN_PASSWORD)
 
 

@@ -5,11 +5,30 @@
 // Wraps sidebar, topbar, and child page routes.
 // ============================================================
 
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Topbar from "./topbar";
+import { getStoredToken } from "../services/api";
 
 export default function AdminLayout() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => Boolean(getStoredToken())
+  );
+
+  useEffect(() => {
+    function handleAuthExpired() {
+      setIsAuthenticated(false);
+    }
+
+    window.addEventListener("admin-auth-expired", handleAuthExpired);
+    return () => window.removeEventListener("admin-auth-expired", handleAuthExpired);
+  }, []);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="app-container">
       <Sidebar />
