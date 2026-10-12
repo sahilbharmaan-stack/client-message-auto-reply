@@ -42,8 +42,11 @@ The Vercel function stores SQLite in `/tmp`, which is temporary and may not be
 shared between function instances. For data that must persist, deploy the API
 using the included `render.yaml` and configure `VITE_API_BASE_URL` with its URL.
 
-1. In Vercel Project Settings → Environment Variables, set the three required
-   secrets. Do not use the local demo credentials for a deployed service.
+1. In Vercel Project Settings → Environment Variables, set `SECRET_KEY`,
+   `ADMIN_EMAIL`, and `ADMIN_PASSWORD` for Production. Store the signing key and
+   password as Secret values, and create a new deployment after changing any
+   environment variable; existing deployments do not inherit those changes.
+   Do not use the local demo credentials for a deployed service.
 2. Deploy the repository on Vercel. `main.py` serves the FastAPI API and the
    production Vite build; frontend API requests use the same deployment origin.
 3. To keep conversations and rules across restarts, create a Render Blueprint
