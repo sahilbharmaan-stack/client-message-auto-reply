@@ -1,1 +1,4 @@
--r backend/requirements.txt
+fastapi==0.139.2
+uvicorn[standard]==0.30.6
+pandas==2.3.3
+PyJWT==2.10.1
