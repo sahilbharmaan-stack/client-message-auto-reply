@@ -457,102 +457,109 @@ def seed_default_rules():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute(
-        "SELECT COUNT(*) FROM auto_reply_rules"
-    )
+    rules = [
+        ("hello", "Hi there! How can I help you?"),
+        ("hi", "Hi there! How can I help you?"),
+        ("hey", "Hi there! How can I help you?"),
+        ("good morning", "Good morning! How can I help you today?"),
+        ("good afternoon", "Good afternoon! How can I help you today?"),
+        ("good evening", "Good evening! How can I help you today?"),
+        ("good night", "Good night! If you need anything, we're here to help."),
+        ("price", "Sure! Please tell us which product or service you're interested in."),
+        ("pricing", "Sure! Please tell us which product or service you're interested in."),
+        ("order", "Sure! Please share your order ID so we can check it for you."),
+        (
+            "refund",
+            "Please share your order ID and a brief description so our support team "
+            "can review your refund request.",
+        ),
+        (
+            "refund policy",
+            "Our support team can help review refund eligibility. Please share your "
+            "order ID and a brief description of the issue.",
+        ),
+        (
+            "money back",
+            "Please share your order ID and a brief description so our support team "
+            "can review your request.",
+        ),
+        (
+            "return",
+            "Please share your order ID and a brief description so our support team "
+            "can help with your return.",
+        ),
+        (
+            "returns",
+            "Please share your order ID and a brief description so our support team "
+            "can help with your return.",
+        ),
+        (
+            "exchange",
+            "Please share your order ID and the item you would like to exchange so "
+            "our support team can help.",
+        ),
+        (
+            "tracking",
+            "Please share your order ID so our support team can help check the "
+            "latest tracking information.",
+        ),
+        (
+            "shipping",
+            "Please share your order ID so our support team can help with your "
+            "shipping question.",
+        ),
+        (
+            "delivery",
+            "Please share your order ID so our support team can help with your "
+            "delivery question.",
+        ),
+        (
+            "cancel",
+            "Please share your order ID so our support team can help with your "
+            "cancellation request.",
+        ),
+        (
+            "cancellation",
+            "Please share your order ID so our support team can help with your "
+            "cancellation request.",
+        ),
+        (
+            "payment",
+            "Please describe the payment issue you encountered, and our support "
+            "team will help you.",
+        ),
+        (
+            "support hours",
+            "Please share your time zone, and our support team can confirm the "
+            "current support hours.",
+        ),
+        (
+            "business hours",
+            "Please share your time zone, and our support team can confirm the "
+            "current business hours.",
+        ),
+        (
+            "hours",
+            "Please share your time zone, and our support team can confirm the "
+            "current support hours.",
+        ),
+        ("thank", "You're welcome! We're always happy to help."),
+        ("thanks", "You're welcome! We're always happy to help."),
+        ("help", "Of course! Please tell us what you need help with."),
+    ]
 
-    count = cursor.fetchone()[0]
-
-    # Only insert if no rules exist
-    if count == 0:
-
-        rules = [
-
-            (
-                "hello",
-                "Hi there! How can I help you?"
-            ),
-
-            (
-                "hi",
-                "Hi there! How can I help you?"
-            ),
-
-            (
-                "hey",
-                "Hi there! How can I help you?"
-            ),
-
-            (
-                "good morning",
-                "Good morning! How can I help you today?"
-            ),
-
-            (
-                "good afternoon",
-                "Good afternoon! How can I help you today?"
-            ),
-
-            (
-                "good evening",
-                "Good evening! How can I help you today?"
-            ),
-
-            (
-                "good night",
-                "Good night! If you need anything, we're here to help."
-            ),
-
-            (
-                "price",
-                "Sure! Please tell us which product or service you're interested in."
-            ),
-
-            (
-                "pricing",
-                "Sure! Please tell us which product or service you're interested in."
-            ),
-
-            (
-                "order",
-                "Sure! Please share your order ID so we can check it for you."
-            ),
-
-            (
-                "refund",
-                "Sure! Please share your order ID so we can help you with the refund."
-            ),
-
-            (
-                "thank",
-                "You're welcome! 😊 We're always happy to help."
-            ),
-
-            (
-                "thanks",
-                "You're welcome! 😊 We're always happy to help."
-            ),
-
-            (
-                "help",
-                "Of course! Please tell us what you need help with."
-            )
-
-        ]
-
-        cursor.executemany(
-            """
-            INSERT INTO auto_reply_rules
-            (
-                keyword,
-                reply,
-                active
-            )
-            VALUES (?, ?, 1)
-            """,
-            rules
+    cursor.executemany(
+        """
+        INSERT INTO auto_reply_rules (keyword, reply, active)
+        SELECT ?, ?, 1
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM auto_reply_rules
+            WHERE LOWER(keyword) = LOWER(?)
         )
-
-        connection.commit()
+        """,
+        [(keyword, reply, keyword) for keyword, reply in rules],
+    )
+    connection.commit()
 
     connection.close()

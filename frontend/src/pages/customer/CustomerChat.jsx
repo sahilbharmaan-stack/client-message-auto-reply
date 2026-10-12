@@ -56,11 +56,12 @@ export default function CustomerChat() {
     }).format(date);
   }
 
-  async function handleSend(textToSend = null) {
+  async function handleSend(textToSend = null, nameOverride = null) {
     const content = (textToSend || message).trim();
     if (!content) return;
 
-    if (!customerName.trim()) {
+    const senderName = (nameOverride ?? customerName).trim();
+    if (!senderName) {
       setErrorBanner("Please provide your name before sending a message.");
       return;
     }
@@ -81,7 +82,7 @@ export default function CustomerChat() {
       if (!conversationId) {
         // Start new conversation
         const result = await createConversation({
-          customer_name: customerName.trim(),
+          customer_name: senderName,
           customer_email: customerEmail.trim() || undefined,
           message: content
         });
@@ -139,10 +140,12 @@ export default function CustomerChat() {
   }
 
   function handlePromptClick(promptText) {
+    let nameForPrompt = customerName;
     if (!customerName.trim()) {
-      setCustomerName("Guest Customer");
+      nameForPrompt = "Guest Customer";
+      setCustomerName(nameForPrompt);
     }
-    handleSend(promptText);
+    handleSend(promptText, nameForPrompt);
   }
 
   return (
