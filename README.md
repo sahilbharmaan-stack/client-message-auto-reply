@@ -1,32 +1,39 @@
-# React + TypeScript + Vite
+# Client Message Auto Reply
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A React/Vite inbox backed by a FastAPI API and SQLite. Features include customer
+conversations and message history, keyword-based automatic replies, reply-rule
+management, dashboard analytics, demo data, and CSV export.
 
-Currently, two official plugins are available:
+## Run locally (Windows)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Install the frontend dependencies from the repository root:
 
-## React Compiler
+   ```powershell
+   npm install
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. In a second terminal, install and start the backend from the repository root:
 
-## Expanding the Oxlint configuration
+   ```powershell
+   py -m venv backend\venv
+   backend\venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+   backend\venv\Scripts\python.exe -m uvicorn backend.main:app --reload
+   ```
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+3. Start the frontend from the repository root:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+   ```powershell
+   npm run dev
+   ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open the Vite URL shown in the terminal (normally `http://localhost:5173`).
+The frontend proxies `/api` requests to the backend at `http://127.0.0.1:8000`.
+If the backend runs elsewhere, set `VITE_API_BASE_URL` to its base URL or update
+the Vite proxy target in `vite.config.ts`.
+
+## Backend API
+
+FastAPI documentation is available at `http://127.0.0.1:8000/docs` while the
+backend is running. The supported API includes conversation CRUD and message
+history, auto-reply-rule CRUD, dashboard and daily analytics, demo seeding,
+and conversation CSV export.
