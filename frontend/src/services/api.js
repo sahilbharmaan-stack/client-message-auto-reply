@@ -5,7 +5,8 @@
 // Connects to FastAPI backend via Vite proxy (/api) or direct host.
 // ============================================================
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "/api" : "");
 
 // Auth token storage key
 const TOKEN_KEY = "autoreply_admin_token";

@@ -21,7 +21,12 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "chat_auto_reply"))
+DEFAULT_DATABASE_PATH = (
+    Path("/tmp/chat_auto_reply")
+    if os.environ.get("VERCEL")
+    else BASE_DIR / "chat_auto_reply"
+)
+DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", DEFAULT_DATABASE_PATH))
 LEGACY_DATABASE_PATH = BASE_DIR / "chat_auto_reply.db"
 
 

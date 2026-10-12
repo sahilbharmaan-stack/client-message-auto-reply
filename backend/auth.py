@@ -20,9 +20,7 @@ except ImportError as error:
 # ============================================================
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
-if not SECRET_KEY:
-    if os.environ.get("RENDER"):
-        raise RuntimeError("SECRET_KEY must be configured for the deployed API.")
+if not SECRET_KEY and not (os.environ.get("RENDER") or os.environ.get("VERCEL")):
     SECRET_KEY = "local-development-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -77,6 +75,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ============================================================
 
 def create_access_token(data: dict) -> str:
+    if not SECRET_KEY:
+        raise RuntimeError("SECRET_KEY must be configured for the deployed API.")
+
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
@@ -91,7 +92,7 @@ def create_access_token(data: dict) -> str:
 # ============================================================
 
 def verify_token(token: str):
-    if not token:
+    if not token or not SECRET_KEY:
         return None
 
     try:

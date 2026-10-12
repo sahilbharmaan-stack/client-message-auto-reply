@@ -35,20 +35,20 @@ defaults are disabled on Render and must never be used for a deployed service.
 
 ## Deploy
 
-The frontend can be deployed to Vercel, but the FastAPI API and SQLite database
-must run on a host with persistent storage. The included `render.yaml` deploys
-the API to Render with a persistent disk; SQLite data would be lost if it were
-stored in a Vercel function or on Render's temporary filesystem.
+Vercel runs the FastAPI API and serves the built Vite frontend from the same
+deployment. Set `SECRET_KEY`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in the Vercel
+project's Environment Variables for Production and Preview before deploying.
+The Vercel function stores SQLite in `/tmp`, which is temporary and may not be
+shared between function instances. For data that must persist, deploy the API
+using the included `render.yaml` and configure `VITE_API_BASE_URL` with its URL.
 
-1. Create a Render Blueprint from this repository using `render.yaml`. Set
-   `ADMIN_EMAIL` and `ADMIN_PASSWORD` when prompted. Render generates
-   `SECRET_KEY`; the database is stored on the mounted persistent disk.
-2. Set the Vercel project root to this repository and add
-   `VITE_API_BASE_URL` with the URL of the deployed Render API (for example,
-   `https://client-message-auto-reply-api.onrender.com`, without a trailing
-   slash).
-3. Deploy the repository on Vercel. The included `vercel.json` builds the root
-   Vite app and routes client-side navigation to `index.html`.
+1. In Vercel Project Settings → Environment Variables, set the three required
+   secrets. Do not use the local demo credentials for a deployed service.
+2. Deploy the repository on Vercel. `main.py` serves the FastAPI API and the
+   production Vite build; frontend API requests use the same deployment origin.
+3. To keep conversations and rules across restarts, create a Render Blueprint
+   using `render.yaml`, then set Vercel's `VITE_API_BASE_URL` to the Render API
+   URL and redeploy. SQLite on Vercel is only suitable for temporary demos.
 
 The admin API endpoints require a bearer token from the login endpoint. The
 customer chat endpoints remain public by design; add customer identity and

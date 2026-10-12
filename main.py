@@ -1,3 +1,5 @@
-"""Expose the complete backend app when launched from the repository root."""
+"""Expose the FastAPI API and the built frontend on Vercel."""
 
 from backend.main import app
+
+app.frontend("/", directory="dist", fallback="index.html")

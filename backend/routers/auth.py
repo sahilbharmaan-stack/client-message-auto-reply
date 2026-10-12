@@ -44,11 +44,10 @@ class LoginRequest(BaseModel):
 
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
-if os.environ.get("RENDER") and (not ADMIN_EMAIL or not ADMIN_PASSWORD):
-    raise RuntimeError("ADMIN_EMAIL and ADMIN_PASSWORD must be configured for the deployed API.")
-ADMIN_EMAIL = ADMIN_EMAIL or "admin@company.com"
-ADMIN_PASSWORD = ADMIN_PASSWORD or "admin123"
-ADMIN_PASSWORD_HASH = get_password_hash(ADMIN_PASSWORD)
+if not os.environ.get("RENDER") and not os.environ.get("VERCEL"):
+    ADMIN_EMAIL = ADMIN_EMAIL or "admin@company.com"
+    ADMIN_PASSWORD = ADMIN_PASSWORD or "admin123"
+ADMIN_PASSWORD_HASH = get_password_hash(ADMIN_PASSWORD) if ADMIN_PASSWORD else None
 
 
 # ============================================================
@@ -57,6 +56,15 @@ ADMIN_PASSWORD_HASH = get_password_hash(ADMIN_PASSWORD)
 
 @router.post("/login")
 def login(credentials: LoginRequest):
+    if not ADMIN_EMAIL or not ADMIN_PASSWORD or not os.environ.get("SECRET_KEY"):
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Admin login is not configured. Set ADMIN_EMAIL, "
+                "ADMIN_PASSWORD, and SECRET_KEY in the deployment environment."
+            ),
+        )
+
     if credentials.email.strip().lower() != ADMIN_EMAIL.lower():
         raise HTTPException(
             status_code=401,
