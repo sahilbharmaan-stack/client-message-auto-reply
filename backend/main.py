@@ -5,11 +5,13 @@
 # ============================================================
 
 import csv
+import os
 from io import StringIO
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 try:
@@ -124,6 +126,8 @@ def startup():
 
 @app.get("/")
 def root():
+    if os.environ.get("VERCEL"):
+        return RedirectResponse(url="/login")
     return {
         "message": "Customer Message Auto Reply API is running",
         "version": "2.0.0",
